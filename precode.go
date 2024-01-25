@@ -44,14 +44,14 @@ var tasks = map[string]Task{
 func getALLTasks(w http.ResponseWriter, r *http.Request) {
 	response, err := json.Marshal(tasks)
 	if err != nil {
-		log.Printf("Ошибка w.Write(response): %v", err)
+		log.Printf("Ошибка w.Write(response): %v", http.StatusBadRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(response)
 	if err != nil {
-		log.Printf("Ошибка w.Write(response): %v", err)
+		log.Printf("Ошибка w.Write(response): %v", http.StatusBadRequest)
 		return
 	}
 }
@@ -77,7 +77,7 @@ func getTasksId(w http.ResponseWriter, r *http.Request) {
 	}
 	response, err := json.Marshal(findedTask)
 	if err != nil {
-		log.Printf("Ошибка json.Marhal: %v", err)
+		log.Printf("Ошибка json.Marhal: %v", http.StatusBadRequest)
 		return
 	}
 
@@ -85,7 +85,7 @@ func getTasksId(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(response)
 	if err != nil {
-		log.Printf("Ошибка w.Write(response): %v", err)
+		log.Printf("Ошибка w.Write(response): %v", http.StatusBadRequest)
 		return
 	}
 }
@@ -111,7 +111,7 @@ func main() {
 
 	r.Get("/tasks/{id}", getTasksId)
 
-	r.Get("/tasks/{id}", deleteTasksId)
+	r.delete("/tasks/{id}", deleteTasksId)
 
 	if err := http.ListenAndServe(":8080", r); err != nil {
 		fmt.Printf("Ошибка при запуске сервера: %s", err.Error())
