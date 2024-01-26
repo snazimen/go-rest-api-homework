@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -44,14 +43,14 @@ var tasks = map[string]Task{
 func getALLTasks(w http.ResponseWriter, r *http.Request) {
 	response, err := json.Marshal(tasks)
 	if err != nil {
-		log.Printf("Ошибка w.Write(response): %v", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(response)
 	if err != nil {
-		log.Printf("Ошибка w.Write(response): %v", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -61,7 +60,7 @@ func postTasks(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
 	err := dec.Decode(&postTask)
 	if err != nil {
-		log.Printf("Ошибка dec.Decode: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	tasks[postTask.ID] = postTask
@@ -72,12 +71,12 @@ func getTasksId(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	findedTask, ok := tasks[id]
 	if !ok {
-		log.Print("Ошибка task не найден")
+		http.Error(w, "Задача не найдена", http.StatusNoContent)
 		return
 	}
 	response, err := json.Marshal(findedTask)
 	if err != nil {
-		log.Printf("Ошибка json.Marhal: %v", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -85,7 +84,7 @@ func getTasksId(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(response)
 	if err != nil {
-		log.Printf("Ошибка w.Write(response): %v", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -94,7 +93,7 @@ func deleteTasksId(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	findedTask, ok := tasks[id]
 	if !ok {
-		log.Print("Ошибка task не найден")
+		http.Error(w, "Задача не найдена", http.StatusBadRequest)
 		return
 	}
 	delete(tasks, findedTask.ID)
@@ -111,7 +110,7 @@ func main() {
 
 	r.Get("/tasks/{id}", getTasksId)
 
-	r.delete("/tasks/{id}", deleteTasksId)
+	r.Delete("/tasks/{id}", deleteTasksId)
 
 	if err := http.ListenAndServe(":8080", r); err != nil {
 		fmt.Printf("Ошибка при запуске сервера: %s", err.Error())
